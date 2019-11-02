@@ -22,13 +22,17 @@ public class Tweet {
         return tweet;
     }
 
-    public static List<Tweet> fromJsonArray(JSONArray jsonArray) throws JSONException{
+    public static List<Tweet> fromJsonArray(JSONArray jsonArray) throws JSONException {
         List<Tweet> tweets = new ArrayList<Tweet>();
 
-        for (int i = 0; i < jsonArray.length(); i++){
+        for (int i = 0; i < jsonArray.length(); i++) {
             tweets.add(fromJson(jsonArray.getJSONObject(i)));
         }
 
         return tweets;
+    }
+
+    public String getFormattedTimestamp(){
+        return TimeFormatter.getTimeDifference(createdAt);
     }
 }
