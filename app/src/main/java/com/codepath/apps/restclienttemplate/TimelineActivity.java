@@ -25,11 +25,13 @@ public class TimelineActivity extends AppCompatActivity {
     List<Tweet> tweets;
     TweetsAdapter tweetsAdapter;
     SwipeRefreshLayout swipeContainer;
+    EndlessRecyclerViewScrollListener scrollListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timeline);
+
 
         client = TwitterApplication.getRestClient(this);
 
@@ -51,10 +53,54 @@ public class TimelineActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.rvTweets);
         tweets = new ArrayList<Tweet>();
         tweetsAdapter = new TweetsAdapter(this, tweets);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(tweetsAdapter);
 
+        scrollListener = new EndlessRecyclerViewScrollListener(linearLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Log.i("timeline", "user scrolling" + page);
+                loadMoreData();
+            }
+        };
+
+        recyclerView.addOnScrollListener(scrollListener);
+
         populateHomeTimeline();
+    }
+
+    private void loadMoreData() {
+        // Send an API request to retrieve appropriate paginated data
+        //  --> Send the request including an offset value (i.e `page`) as a query parameter.
+        //  --> Deserialize and construct new model objects from the API response
+        //  --> Append the new data objects to the existing set of items inside the array of items
+        //  --> Notify the adapter of the new items made with `notifyItemRangeInserted()`
+
+        client.getNextPageOfTweets(new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Headers headers, JSON json) {
+                Log.i("timeline", "next page of tweets " + json.toString());
+
+                JSONArray jsonArray = json.jsonArray;
+
+                try{
+                    List<Tweet> tweets = Tweet.fromJsonArray(jsonArray);
+                    tweetsAdapter.addAll(tweets);
+                }
+
+                catch (JSONException e){
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                Log.e("timeline", "failure on next page", throwable);
+            }
+        }, tweets.get(tweets.size() - 1).id);
+
     }
 
     private void populateHomeTimeline() {
