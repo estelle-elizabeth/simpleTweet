@@ -1,11 +1,15 @@
 package com.codepath.apps.restclienttemplate;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +26,7 @@ public class ComposeActivity extends AppCompatActivity {
     EditText composeTweet;
     Button tweetButton;
     TwitterClient twitterClient;
+    TextView tweetLength;
 
     public final String TAG = "ComposeActivity: ";
 
@@ -36,8 +41,36 @@ public class ComposeActivity extends AppCompatActivity {
 
         composeTweet = findViewById(R.id.composeTweet);
         tweetButton = findViewById(R.id.tweetButton);
-
+        tweetLength = findViewById(R.id.tweetLength);
         twitterClient = TwitterApplication.getRestClient(this);
+
+        composeTweet.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                tweetLength.setText(String.valueOf(charSequence.length()));
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                tweetLength.setText(String.valueOf(charSequence.length()));
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (editable.length() > MAX_TWEET_LENGTH){
+                    tweetLength.setTextColor(Color.RED);
+                    tweetButton.setEnabled(false);
+                }
+
+                else{
+                    tweetLength.setTextColor(Color.BLACK);
+                    tweetButton.setEnabled(true);
+                }
+//                tweetLength.setText(String.valueOf(editable.length()));
+            }
+        });
 
         tweetButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,6 +84,7 @@ public class ComposeActivity extends AppCompatActivity {
 
                 else if (tweetContent.length() > MAX_TWEET_LENGTH){
                     Toast.makeText(ComposeActivity.this, "Sorry, tweet is too long", Toast.LENGTH_SHORT).show();
+
                     return;
                 }
 
@@ -82,6 +116,8 @@ public class ComposeActivity extends AppCompatActivity {
             }
         });
     }
+
+
 
 
 }
